@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.aqi-armenia"
+    path="/org/gnome/shell/extensions/aqi-armenia/">
+    <key name="city" type="s">
+      <default>'Yerevan'</default>
+    </key>
+  </schema>
+</schemalist>

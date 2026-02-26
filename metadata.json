@@ -1,0 +1,10 @@
+{
+  "name": "AQI Armenia",
+  "description": "GNOME Shell extension showing Air Quality Index for Armenian cities via airquality.am",
+  "uuid": "aqi-armenia@dav.eritsyan@gmail.com",
+  "url": "https://github.com/davidoc26/aqi-armenia",
+  "settings-schema": "org.gnome.shell.extensions.aqi-armenia",
+  "shell-version": [
+    "49"
+  ]
+}
