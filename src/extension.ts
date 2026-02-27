@@ -26,6 +26,7 @@ import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
+import { AQIColor } from "./constants.js"
 
 type Region = {
   title: string,
@@ -72,13 +73,13 @@ export default class AQIArmeniaExtension extends Extension {
   private getAqiColor(aqi: string): string {
     const value = Number(aqi);
 
-    if (Number.isNaN(value)) return "#999999";
-    if (value <= 50) return "#00e400";      // Good
-    if (value <= 100) return "#ffff00";     // Moderate
-    if (value <= 150) return "#ff7e00";     // Unhealthy for Sensitive Groups
-    if (value <= 200) return "#ff0000";     // Unhealthy
-    if (value <= 300) return "#8f3f97";     // Very Unhealthy
-    return "#7e0023";                       // Hazardous
+    if (Number.isNaN(value)) return AQIColor.Default;
+    if (value <= 50) return AQIColor.Good;
+    if (value <= 100) return AQIColor.Moderate;
+    if (value <= 150) return AQIColor.UnhealthyForSensitiveGroups;
+    if (value <= 200) return AQIColor.Unhealthy;
+    if (value <= 300) return AQIColor.VeryUnhealthy;
+    return AQIColor.Hazardous;
   }
 
   private parseData(data: string): string {

@@ -17,23 +17,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import Adw from 'gi://Adw';
-import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
-import { ExtensionPreferences, gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+import Adw from "gi://Adw";
+import Gio from "gi://Gio";
+import Gtk from "gi://Gtk";
+import { ExtensionPreferences, gettext as _ } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
+import { City, CITIES } from "./constants.js"
 
 export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences {
   _settings?: Gio.Settings
 
   fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
     this._settings = this.getSettings();
-
     const page = new Adw.PreferencesPage({
       title: _('General'),
       icon_name: 'dialog-information-symbolic',
     });
 
-    const cities = ["Yerevan", "Gyumri"];
     const city_group = new Adw.PreferencesGroup({
       title: "City Selector",
       description: "Choose the city to display AQI for",
@@ -42,10 +41,10 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
     const city_selector = new Adw.ComboRow({
       title: "City",
       model: new Gtk.StringList({
-        strings: cities,
+        strings: [...CITIES],
       }),
     });
-    city_selector.set_selected(cities.indexOf(this._settings.get_string('city')));
+    city_selector.set_selected(CITIES.indexOf(this._settings.get_string('city') as City));
     page.add(city_group);
     city_group.add(city_selector);
 
@@ -53,8 +52,7 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
 
     city_selector.connect("notify::selected", (selector: Adw.ComboRow) => {
       const selectedCity = selector.get_selected_item() as Gtk.StringObject;
-      this._settings?.set_string("city", selectedCity?.get_string()!);
-      log(selectedCity?.get_string()!);
+      this._settings?.set_string("city", selectedCity.get_string());
     })
 
     return Promise.resolve();

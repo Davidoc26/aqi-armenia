@@ -8,7 +8,7 @@ all: dist/extension.js
 node_modules/.package-lock.json: package.json
 	npm install
 
-dist/extension.js dist/prefs.js: node_modules/.package-lock.json *.ts
+dist/extension.js dist/prefs.js: node_modules/.package-lock.json src/*.ts
 	npm run build
 
 schemas/gschemas.compiled: schemas/org.gnome.shell.extensions.$(NAME).gschema.xml
