@@ -19,7 +19,15 @@
 
 export const CITIES = [
   "Yerevan",
-  "Gyumri"
+  "Gyumri",
+  "Abovyan",
+  "Arinj",
+  "Dilijan",
+  "Geghard",
+  "Tsaghkadzor",
+  "Vanadzor",
+  "Agarak",
+  "Sevan",
 ] as const;
 
 export type City = (typeof CITIES)[number];
