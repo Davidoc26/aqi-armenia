@@ -33,6 +33,15 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
       icon_name: 'dialog-information-symbolic',
     });
 
+    const main_group = new Adw.PreferencesGroup({
+      title: "Main Settings",
+    });
+    const color_switch = new Adw.SwitchRow({
+      "title": "Colorized AQI",
+    });
+    page.add(main_group);
+    main_group.add(color_switch);
+
     const city_group = new Adw.PreferencesGroup({
       title: "City Selector",
       description: "Choose the city to display AQI for",
@@ -50,6 +59,7 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
 
     window.add(page)
 
+    this._settings.bind("colorized", color_switch, "active", Gio.SettingsBindFlags.DEFAULT);
     city_selector.connect("notify::selected", (selector: Adw.ComboRow) => {
       const selectedCity = selector.get_selected_item() as Gtk.StringObject;
       this._settings?.set_string("city", selectedCity.get_string());

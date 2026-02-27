@@ -5,5 +5,10 @@
     <key name="city" type="s">
       <default>'Yerevan'</default>
     </key>
+    <key name="colorized" type="b">
+      <default>true</default>
+      <summary>Colorized display</summary>
+      <description>Whether to show colorized AQI</description>
+    </key>
   </schema>
 </schemalist>

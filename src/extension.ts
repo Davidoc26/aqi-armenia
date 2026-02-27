@@ -26,7 +26,7 @@ import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
-import { AQIColor } from "./constants.js"
+import { AQIColorProvider } from "./aqi_color_provider.js";
 
 type Region = {
   title: string,
@@ -46,11 +46,13 @@ export default class AQIArmeniaExtension extends Extension {
   private menu?: PopupMenu.PopupMenu;
   private aqi_value?: St.Label;
   private _timeout_id?: number;
+  private color_provider!: AQIColorProvider;
 
 
   enable() {
     this.gsettings = this.getSettings();
     this.indicator = new PanelMenu.Button(0.0, this.metadata.name, false);
+    this.color_provider = new AQIColorProvider(this.gsettings);
 
     this.aqi_value = new St.Label({
       text: "AQI: Loading...",
@@ -70,18 +72,6 @@ export default class AQIArmeniaExtension extends Extension {
     Main.panel.addToStatusArea(this.uuid, this.indicator);
   }
 
-  private getAqiColor(aqi: string): string {
-    const value = Number(aqi);
-
-    if (Number.isNaN(value)) return AQIColor.Default;
-    if (value <= 50) return AQIColor.Good;
-    if (value <= 100) return AQIColor.Moderate;
-    if (value <= 150) return AQIColor.UnhealthyForSensitiveGroups;
-    if (value <= 200) return AQIColor.Unhealthy;
-    if (value <= 300) return AQIColor.VeryUnhealthy;
-    return AQIColor.Hazardous;
-  }
-
   private parseData(data: string): string {
     const regions: Region[] = JSON.parse(data).regions;
     const city = regions.find(r => r.title === this.gsettings?.get_string('city'));
@@ -92,7 +82,12 @@ export default class AQIArmeniaExtension extends Extension {
   }
 
   private setAqi(aqi: string): void {
-    this.aqi_value?.clutter_text.set_markup(`AQI: <span foreground="${this.getAqiColor(aqi)}">${aqi}</span>`);
+    if (!this.color_provider.isColorized()) {
+      this.aqi_value?.clutter_text.set_markup(`AQI: ${aqi}`);
+      return;
+    }
+
+    this.aqi_value?.clutter_text.set_markup(`AQI: <span foreground="${this.color_provider.getColor(aqi)}">${aqi}</span>`);
   }
 
   private fetchData(): Promise<string> {
