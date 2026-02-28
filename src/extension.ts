@@ -65,7 +65,7 @@ export default class AQIArmeniaExtension extends Extension {
 
     this.createMenu();
     this.indicator.add_child(this.aqi_value);
-    this.bingSettings();
+    this.bindSettings();
 
     this.updateAqi();
 
@@ -78,19 +78,11 @@ export default class AQIArmeniaExtension extends Extension {
     Main.panel.addToStatusArea(this.uuid, this.indicator);
   }
 
-  private bingSettings(): void {
-    const city_signal_id = this.gsettings!.connect("changed::city", () => {
-      log("changed::city");
-      this.updateAqi();
-    });
-
+  private bindSettings(): void {
+    const city_signal_id = this.gsettings!.connect("changed::city", () => this.updateAqi());
     this.signalIds?.push(city_signal_id);
 
-    const district_signal_id = this.gsettings!.connect("changed::yerevan-district", () => {
-      log("changed::yerevan-district");
-      this.updateAqi();
-    });
-
+    const district_signal_id = this.gsettings!.connect("changed::yerevan-district", () => this.updateAqi());
     this.signalIds?.push(district_signal_id);
   }
 
