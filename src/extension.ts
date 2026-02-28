@@ -49,12 +49,14 @@ export default class AQIArmeniaExtension extends Extension {
   private _timeout_id?: number;
   private color_provider!: AQIColorProvider;
   private city_provider!: CityProvider;
+  private signalIds?: number[];
 
   enable() {
     this.gsettings = this.getSettings();
     this.indicator = new PanelMenu.Button(0.0, this.metadata.name, false);
     this.color_provider = new AQIColorProvider(this.gsettings);
     this.city_provider = new CityProvider(this.gsettings);
+    this.signalIds = [];
 
     this.aqi_value = new St.Label({
       text: "AQI: Loading...",
@@ -63,6 +65,7 @@ export default class AQIArmeniaExtension extends Extension {
 
     this.createMenu();
     this.indicator.add_child(this.aqi_value);
+    this.bingSettings();
 
     this.updateAqi();
 
@@ -71,7 +74,24 @@ export default class AQIArmeniaExtension extends Extension {
 
       return GLib.SOURCE_CONTINUE;
     });
+
     Main.panel.addToStatusArea(this.uuid, this.indicator);
+  }
+
+  private bingSettings(): void {
+    const city_signal_id = this.gsettings!.connect("changed::city", () => {
+      log("changed::city");
+      this.updateAqi();
+    });
+
+    this.signalIds?.push(city_signal_id);
+
+    const district_signal_id = this.gsettings!.connect("changed::yerevan-district", () => {
+      log("changed::yerevan-district");
+      this.updateAqi();
+    });
+
+    this.signalIds?.push(district_signal_id);
   }
 
   private parseData(data: string): string {
@@ -98,6 +118,7 @@ export default class AQIArmeniaExtension extends Extension {
   private fetchData(): Promise<string> {
     const session = new Soup.Session();
     const url = "https://airquality.am/en/air-quality-app/v1/stations.json";
+    log(`Request to ${url}`);
     const message = Soup.Message.new('GET', url);
 
     return new Promise((resolve, reject) => {
@@ -129,7 +150,13 @@ export default class AQIArmeniaExtension extends Extension {
     this.indicator?.setMenu(this.menu);
   }
 
+  private diconnectSignals(): void {
+    this.signalIds?.forEach(id => this.gsettings?.disconnect(id));
+  }
+
   disable() {
+    this.diconnectSignals();
+    this.signalIds = undefined;
     this.gsettings = undefined;
     this.indicator?.destroy();
     this.menu = undefined;
