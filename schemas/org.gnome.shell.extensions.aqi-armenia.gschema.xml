@@ -5,6 +5,9 @@
     <key name="city" type="s">
       <default>'Yerevan'</default>
     </key>
+    <key name="yerevan-district" type="s">
+      <default>'Yerevan'</default>
+    </key>
     <key name="colorized" type="b">
       <default>true</default>
       <summary>Colorized display</summary>

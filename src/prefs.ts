@@ -21,7 +21,7 @@ import Adw from "gi://Adw";
 import Gio from "gi://Gio";
 import Gtk from "gi://Gtk";
 import { ExtensionPreferences, gettext as _ } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
-import { City, CITIES } from "./constants.js"
+import { City, CITIES, DISTRICTS, District } from "./constants.js"
 
 export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences {
   _settings?: Gio.Settings
@@ -53,16 +53,37 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
         strings: [...CITIES],
       }),
     });
+
+    const region_selector = new Adw.ComboRow({
+      title: "Administrative district (Leave Yerevan to get data for the entire city)",
+      model: new Gtk.StringList({
+        strings: [...DISTRICTS],
+      }),
+    });
+
     city_selector.set_selected(CITIES.indexOf(this._settings.get_string('city') as City));
+    region_selector.set_selected(DISTRICTS.indexOf(this._settings.get_string('yerevan-district') as District));
     page.add(city_group);
     city_group.add(city_selector);
+    city_group.add(region_selector);
 
     window.add(page)
 
     this._settings.bind("colorized", color_switch, "active", Gio.SettingsBindFlags.DEFAULT);
+    region_selector.connect("notify::selected", (selector: Adw.ComboRow) => {
+      const selectedDistinct = selector.get_selected_item() as Gtk.StringObject;
+      this._settings?.set_string("yerevan-district", selectedDistinct.get_string());
+    })
     city_selector.connect("notify::selected", (selector: Adw.ComboRow) => {
       const selectedCity = selector.get_selected_item() as Gtk.StringObject;
       this._settings?.set_string("city", selectedCity.get_string());
+
+      if (selectedCity.get_string() === "Yerevan") {
+        region_selector.set_visible(true);
+      }
+      else {
+        region_selector.set_visible(false);
+      }
     })
 
     return Promise.resolve();

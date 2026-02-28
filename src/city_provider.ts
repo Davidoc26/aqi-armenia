@@ -17,46 +17,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export const CITIES = [
-  "Yerevan",
-  "Gyumri",
-  "Abovyan",
-  "Arinj",
-  "Dilijan",
-  "Geghard",
-  "Tsaghkadzor",
-  "Vanadzor",
-  "Agarak",
-  "Sevan",
-] as const;
+import Gio from "gi://Gio";
+import { City, District } from "./constants.js";
 
-export type City = (typeof CITIES)[number];
+export class CityProvider {
+  constructor(private settings: Gio.Settings) { }
 
-export const DISTRICTS = [
-  "Yerevan",
-  "Kentron",
-  "Avan",
-  "Ajapnyak",
-  "Arabkir",
-  "Avan",
-  "Davtashen",
-  "Erebuni",
-  "Kanaker-Zeytun",
-  "Malatia-Sebastia",
-  "Nor-Nork",
-  "Nork-Marash",
-  "Shengavit",
-] as const;
+  public getCity(): [City, District?] {
+    const city = this.settings.get_string('city') as City;
 
-export type District = (typeof DISTRICTS)[number];
+    if (city === "Yerevan") {
+      const district = this.settings.get_string('yerevan-district') as District;
+      return [city, district];
+    }
 
-export enum AQIColor {
-  Good = "#00e400",
-  Moderate = "#ffff00",
-  UnhealthyForSensitiveGroups = "#ff7e00",
-  Unhealthy = "#ff0000",
-  VeryUnhealthy = "#8f3f97",
-  Hazardous = "#7e0023",
+    return [this.settings.get_string('city') as City];
+  }
 
-  Default = "#999999",
 }

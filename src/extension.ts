@@ -27,6 +27,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { AQIColorProvider } from "./aqi_color_provider.js";
+import { CityProvider } from "./city_provider.js";
 
 type Region = {
   title: string,
@@ -47,12 +48,13 @@ export default class AQIArmeniaExtension extends Extension {
   private aqi_value?: St.Label;
   private _timeout_id?: number;
   private color_provider!: AQIColorProvider;
-
+  private city_provider!: CityProvider;
 
   enable() {
     this.gsettings = this.getSettings();
     this.indicator = new PanelMenu.Button(0.0, this.metadata.name, false);
     this.color_provider = new AQIColorProvider(this.gsettings);
+    this.city_provider = new CityProvider(this.gsettings);
 
     this.aqi_value = new St.Label({
       text: "AQI: Loading...",
@@ -74,11 +76,14 @@ export default class AQIArmeniaExtension extends Extension {
 
   private parseData(data: string): string {
     const regions: Region[] = JSON.parse(data).regions;
-    const city = regions.find(r => r.title === this.gsettings?.get_string('city'));
-    if (!city)
-      return "?";;
+    const [city, district] = this.city_provider.getCity();
+    if (district) {
+      const d = regions.find(r => r.title === district);
+      return d?.aqi.toString() ?? '?';
+    }
+    const region = regions.find(r => r.title === city);
 
-    return city?.aqi.toString();
+    return region?.aqi.toString() ?? "?";
   }
 
   private setAqi(aqi: string): void {
