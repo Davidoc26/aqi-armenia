@@ -1,11 +1,12 @@
 # AQI Armenia
 
-> GNOME Shell extension showing Air Quality Index (AQI) for Armenian cities, powered by airquality.am open data
+> GNOME Shell extension showing Air Quality Index (AQI) for Armenian cities, powered by airquality.am open data 😷
 
 ## Features
 
 - Real-time AQI display in your top panel
 - Support for multiple Armenian cities (configurable)
+- Administrative districts selection for Yerevan
 
 ## Requirements
 - Gnome Shell **49**
