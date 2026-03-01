@@ -41,30 +41,34 @@ type Region = {
   time: string,
 }
 
+type AQIValue = number | string;
+
 export default class AQIArmeniaExtension extends Extension {
-  gsettings?: Gio.Settings
+  private gsettings?: Gio.Settings
   private indicator?: PanelMenu.Button
   private menu?: PopupMenu.PopupMenu;
-  private aqi_value?: St.Label;
+  private aqi_label?: St.Label;
+  private aqi_value?: number | string;
   private _timeout_id?: number;
   private color_provider!: AQIColorProvider;
   private city_provider!: CityProvider;
-  private signalIds?: number[];
+  private settings_signal_ids?: number[];
 
   enable() {
     this.gsettings = this.getSettings();
     this.indicator = new PanelMenu.Button(0.0, this.metadata.name, false);
     this.color_provider = new AQIColorProvider(this.gsettings);
     this.city_provider = new CityProvider(this.gsettings);
-    this.signalIds = [];
+    this.settings_signal_ids = [];
+    this.aqi_value = "?";
 
-    this.aqi_value = new St.Label({
+    this.aqi_label = new St.Label({
       text: "AQI: Loading...",
       y_align: Clutter.ActorAlign.CENTER,
     });
 
     this.createMenu();
-    this.indicator.add_child(this.aqi_value);
+    this.indicator.add_child(this.aqi_label);
     this.bindSettings();
 
     this.updateAqi();
@@ -80,13 +84,16 @@ export default class AQIArmeniaExtension extends Extension {
 
   private bindSettings(): void {
     const city_signal_id = this.gsettings!.connect("changed::city", () => this.updateAqi());
-    this.signalIds?.push(city_signal_id);
+    this.settings_signal_ids?.push(city_signal_id);
 
     const district_signal_id = this.gsettings!.connect("changed::yerevan-district", () => this.updateAqi());
-    this.signalIds?.push(district_signal_id);
+    this.settings_signal_ids?.push(district_signal_id);
+
+    const color_signal_id = this.gsettings!.connect("changed::colorized", () => this.setAqiLabel(this.aqi_value!));
+    this.settings_signal_ids?.push(color_signal_id);
   }
 
-  private parseData(data: string): string {
+  private parseData(data: string): AQIValue {
     const regions: Region[] = JSON.parse(data).regions;
     const [city, district] = this.city_provider.getCity();
     if (district) {
@@ -98,19 +105,18 @@ export default class AQIArmeniaExtension extends Extension {
     return region?.aqi.toString() ?? "?";
   }
 
-  private setAqi(aqi: string): void {
+  private setAqiLabel(aqi: AQIValue): void {
     if (!this.color_provider.isColorized()) {
-      this.aqi_value?.clutter_text.set_markup(`AQI: ${aqi}`);
+      this.aqi_label?.clutter_text.set_markup(`AQI: ${aqi}`);
       return;
     }
 
-    this.aqi_value?.clutter_text.set_markup(`AQI: <span foreground="${this.color_provider.getColor(aqi)}">${aqi}</span>`);
+    this.aqi_label?.clutter_text.set_markup(`AQI: <span foreground="${this.color_provider.getColor(aqi)}">${aqi}</span>`);
   }
 
-  private fetchData(): Promise<string> {
+  private fetchData(): Promise<AQIValue> {
     const session = new Soup.Session();
     const url = "https://airquality.am/en/air-quality-app/v1/stations.json";
-    log(`Request to ${url}`);
     const message = Soup.Message.new('GET', url);
 
     return new Promise((resolve, reject) => {
@@ -127,8 +133,8 @@ export default class AQIArmeniaExtension extends Extension {
   }
 
   private async updateAqi(): Promise<void> {
-    const aqi: string = await this.fetchData().catch(() => "?");
-    this.setAqi(aqi);
+    this.aqi_value = await this.fetchData().catch(() => "?");
+    this.setAqiLabel(this.aqi_value);
   }
 
   private createMenu(): void {
@@ -143,16 +149,16 @@ export default class AQIArmeniaExtension extends Extension {
   }
 
   private diconnectSignals(): void {
-    this.signalIds?.forEach(id => this.gsettings?.disconnect(id));
+    this.settings_signal_ids?.forEach(id => this.gsettings?.disconnect(id));
   }
 
   disable() {
     this.diconnectSignals();
-    this.signalIds = undefined;
+    this.settings_signal_ids = undefined;
     this.gsettings = undefined;
     this.indicator?.destroy();
     this.menu = undefined;
-    this.aqi_value = undefined;
+    this.aqi_label = undefined;
     if (this._timeout_id) GLib.source_remove(this._timeout_id);
   }
 }
