@@ -28,6 +28,7 @@ import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { AQIColorProvider } from "./aqi_color_provider.js";
 import { CityProvider } from "./city_provider.js";
+import { UNKNOWN_AQI_VALUE } from "./constants.js";
 
 type Region = {
   title: string,
@@ -60,7 +61,7 @@ export default class AQIArmeniaExtension extends Extension {
     this.color_provider = new AQIColorProvider(this.gsettings);
     this.city_provider = new CityProvider(this.gsettings);
     this.settings_signal_ids = [];
-    this.aqi_value = "?";
+    this.aqi_value = UNKNOWN_AQI_VALUE;
 
     this.aqi_label = new St.Label({
       text: "AQI: Loading...",
@@ -102,7 +103,7 @@ export default class AQIArmeniaExtension extends Extension {
     }
     const region = regions.find(r => r.title === city);
 
-    return region?.aqi.toString() ?? "?";
+    return region?.aqi ?? UNKNOWN_AQI_VALUE;
   }
 
   private setAqiLabel(aqi: AQIValue): void {
@@ -133,7 +134,7 @@ export default class AQIArmeniaExtension extends Extension {
   }
 
   private async updateAqi(): Promise<void> {
-    this.aqi_value = await this.fetchData().catch(() => "?");
+    this.aqi_value = await this.fetchData().catch(() => UNKNOWN_AQI_VALUE);
     this.setAqiLabel(this.aqi_value);
   }
 

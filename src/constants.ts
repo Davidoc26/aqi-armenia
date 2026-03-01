@@ -60,3 +60,5 @@ export enum AQIColor {
 
   Default = "#999999",
 }
+
+export const UNKNOWN_AQI_VALUE: string = "?" as const;
