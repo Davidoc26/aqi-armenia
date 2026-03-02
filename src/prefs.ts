@@ -39,8 +39,18 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
     const color_switch = new Adw.SwitchRow({
       "title": "Colorized AQI",
     });
+    const update_time_selector = new Adw.SpinRow({
+      title: "Auto-update frequency (in minutes)",
+      adjustment: new Gtk.Adjustment({
+        lower: 10,
+        upper: 60,
+        value: this._settings.get_int("update-time"),
+        stepIncrement: 1,
+      }),
+    });
     page.add(main_group);
     main_group.add(color_switch);
+    main_group.add(update_time_selector);
 
     const city_group = new Adw.PreferencesGroup({
       title: "City Selector",
@@ -69,6 +79,7 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
 
     window.add(page)
 
+    this._settings.bind("update-time", update_time_selector, "value", Gio.SettingsBindFlags.DEFAULT);
     this._settings.bind("colorized", color_switch, "active", Gio.SettingsBindFlags.DEFAULT);
     region_selector.connect("notify::selected", (selector: Adw.ComboRow) => {
       const selectedDistinct = selector.get_selected_item() as Gtk.StringObject;

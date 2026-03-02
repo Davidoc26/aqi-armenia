@@ -13,5 +13,9 @@
       <summary>Colorized display</summary>
       <description>Whether to show colorized AQI</description>
     </key>
+    <key name="update-time" type="i">
+      <range min="10" max="60" />
+      <default>15</default>
+    </key>
   </schema>
 </schemalist>

@@ -71,16 +71,32 @@ export default class AQIArmeniaExtension extends Extension {
     this.createMenu();
     this.indicator.add_child(this.aqi_label);
     this.bindSettings();
+    this.setUpdateTimer();
 
     this.updateAqi();
 
-    this._timeout_id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 600000, () => {
+    Main.panel.addToStatusArea(this.uuid, this.indicator);
+  }
+
+  private setUpdateTimer(): void {
+    const interval_ms = this.gsettings!.get_int("update-time") * 1000;
+
+    this._timeout_id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, interval_ms, () => {
       this.updateAqi();
 
       return GLib.SOURCE_CONTINUE;
     });
+  }
 
-    Main.panel.addToStatusArea(this.uuid, this.indicator);
+  private removeUpdateTimer(): void {
+    if (this._timeout_id) {
+      GLib.source_remove(this._timeout_id);
+    }
+  }
+
+  private restartUpdateTimer(): void {
+    this.removeUpdateTimer();
+    this.setUpdateTimer();
   }
 
   private bindSettings(): void {
@@ -92,6 +108,9 @@ export default class AQIArmeniaExtension extends Extension {
 
     const color_signal_id = this.gsettings!.connect("changed::colorized", () => this.setAqiLabel(this.aqi_value!));
     this.settings_signal_ids?.push(color_signal_id);
+
+    const update_time_signal_id = this.gsettings!.connect("changed::update-time", () => this.restartUpdateTimer());
+    this.settings_signal_ids?.push(update_time_signal_id);
   }
 
   private parseData(data: string): AQIValue {
