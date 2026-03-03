@@ -118,7 +118,7 @@ export default class AQIArmeniaExtension extends Extension {
     const [city, district] = this.city_provider.getCity();
     if (district) {
       const d = regions.find(r => r.title === district);
-      return d?.aqi.toString() ?? '?';
+      return d?.aqi.toString() ?? UNKNOWN_AQI_VALUE;
     }
     const region = regions.find(r => r.title === city);
 
@@ -179,6 +179,6 @@ export default class AQIArmeniaExtension extends Extension {
     this.indicator?.destroy();
     this.menu = undefined;
     this.aqi_label = undefined;
-    if (this._timeout_id) GLib.source_remove(this._timeout_id);
+    this.removeUpdateTimer();
   }
 }
