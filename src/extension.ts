@@ -50,7 +50,7 @@ export default class AQIArmeniaExtension extends Extension {
   private menu?: PopupMenu.PopupMenu;
   private aqi_label?: St.Label;
   private aqi_value?: number | string;
-  private _timeout_id?: number;
+  private timeout_id?: number;
   private color_provider!: AQIColorProvider;
   private city_provider!: CityProvider;
   private settings_signal_ids?: number[];
@@ -81,7 +81,7 @@ export default class AQIArmeniaExtension extends Extension {
   private setUpdateTimer(): void {
     const interval_ms = this.gsettings!.get_int("update-time") * 1000;
 
-    this._timeout_id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, interval_ms, () => {
+    this.timeout_id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, interval_ms, () => {
       this.updateAqi();
 
       return GLib.SOURCE_CONTINUE;
@@ -89,8 +89,8 @@ export default class AQIArmeniaExtension extends Extension {
   }
 
   private removeUpdateTimer(): void {
-    if (this._timeout_id) {
-      GLib.source_remove(this._timeout_id);
+    if (this.timeout_id) {
+      GLib.source_remove(this.timeout_id);
     }
   }
 

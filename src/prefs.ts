@@ -24,10 +24,10 @@ import { ExtensionPreferences, gettext as _ } from "resource:///org/gnome/Shell/
 import { City, CITIES, DISTRICTS, District } from "./constants.js"
 
 export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences {
-  _settings?: Gio.Settings
+  private settings?: Gio.Settings
 
   fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
-    this._settings = this.getSettings();
+    this.settings = this.getSettings();
     const page = new Adw.PreferencesPage({
       title: _('General'),
       icon_name: 'dialog-information-symbolic',
@@ -44,7 +44,7 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
       adjustment: new Gtk.Adjustment({
         lower: 10,
         upper: 60,
-        value: this._settings.get_int("update-time"),
+        value: this.settings.get_int("update-time"),
         stepIncrement: 1,
       }),
     });
@@ -71,23 +71,23 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
       }),
     });
 
-    city_selector.set_selected(CITIES.indexOf(this._settings.get_string('city') as City));
-    region_selector.set_selected(DISTRICTS.indexOf(this._settings.get_string('yerevan-district') as District));
+    city_selector.set_selected(CITIES.indexOf(this.settings.get_string('city') as City));
+    region_selector.set_selected(DISTRICTS.indexOf(this.settings.get_string('yerevan-district') as District));
     page.add(city_group);
     city_group.add(city_selector);
     city_group.add(region_selector);
 
     window.add(page)
 
-    this._settings.bind("update-time", update_time_selector, "value", Gio.SettingsBindFlags.DEFAULT);
-    this._settings.bind("colorized", color_switch, "active", Gio.SettingsBindFlags.DEFAULT);
+    this.settings.bind("update-time", update_time_selector, "value", Gio.SettingsBindFlags.DEFAULT);
+    this.settings.bind("colorized", color_switch, "active", Gio.SettingsBindFlags.DEFAULT);
     region_selector.connect("notify::selected", (selector: Adw.ComboRow) => {
       const selectedDistinct = selector.get_selected_item() as Gtk.StringObject;
-      this._settings?.set_string("yerevan-district", selectedDistinct.get_string());
+      this.settings?.set_string("yerevan-district", selectedDistinct.get_string());
     })
     city_selector.connect("notify::selected", (selector: Adw.ComboRow) => {
       const selectedCity = selector.get_selected_item() as Gtk.StringObject;
-      this._settings?.set_string("city", selectedCity.get_string());
+      this.settings?.set_string("city", selectedCity.get_string());
 
       if (selectedCity.get_string() === "Yerevan") {
         region_selector.set_visible(true);
