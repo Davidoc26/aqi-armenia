@@ -79,7 +79,7 @@ export default class AQIArmeniaExtension extends Extension {
   }
 
   private setUpdateTimer(): void {
-    const interval_ms = this.gsettings!.get_int("update-time") * 1000;
+    const interval_ms = this.gsettings!.get_int("update-time") * 60000;
 
     this.timeout_id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, interval_ms, () => {
       this.updateAqi();
