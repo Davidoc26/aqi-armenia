@@ -76,6 +76,7 @@ export default class AQIArmeniaExtension extends Extension {
 
   private showIndicator(): void {
     if (this.indicator) {
+      this.indicator.set_reactive(true);
       return;
     }
     this.indicator = new PanelMenu.Button(0.0, this.metadata.name, false);
@@ -109,6 +110,7 @@ export default class AQIArmeniaExtension extends Extension {
     if (session.currentMode === "user" || session.parentMode === "user") {
       this.showIndicator();
     } else if (session.currentMode === "unlock-dialog") {
+      this.indicator?.set_reactive(false);
       this.removeIndicator();
     }
   }
