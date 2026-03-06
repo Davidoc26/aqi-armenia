@@ -214,6 +214,7 @@ export default class AQIArmeniaExtension extends Extension {
     this.settings_signal_ids = undefined;
     this.gsettings = undefined;
     this.indicator?.destroy();
+    this.indicator = undefined;
     this.menu = undefined;
     this.aqi_label = undefined;
     Main.sessionMode.disconnect(this.session_id);
