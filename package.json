@@ -1,6 +1,6 @@
 {
   "name": "aqi-armenia",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Simple extension to monitor AQI in Armenia",
   "type": "module",
   "private": true,

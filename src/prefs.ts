@@ -39,6 +39,10 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
     const color_switch = new Adw.SwitchRow({
       "title": "Colorized AQI",
     });
+    const lock_screen_switch = new Adw.SwitchRow({
+      "title": "Show on lock screen",
+      "subtitle": "Keep indicator visible when device is locked",
+    });
     const update_time_selector = new Adw.SpinRow({
       title: "Auto-update frequency (in minutes)",
       adjustment: new Gtk.Adjustment({
@@ -50,6 +54,7 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
     });
     page.add(main_group);
     main_group.add(color_switch);
+    main_group.add(lock_screen_switch);
     main_group.add(update_time_selector);
 
     const city_group = new Adw.PreferencesGroup({
@@ -79,6 +84,7 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
 
     window.add(page)
 
+    this.settings.bind("lock-screen", lock_screen_switch, "active", Gio.SettingsBindFlags.DEFAULT);
     this.settings.bind("update-time", update_time_selector, "value", Gio.SettingsBindFlags.DEFAULT);
     this.settings.bind("colorized", color_switch, "active", Gio.SettingsBindFlags.DEFAULT);
     region_selector.connect("notify::selected", (selector: Adw.ComboRow) => {

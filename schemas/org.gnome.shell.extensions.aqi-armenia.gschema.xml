@@ -13,6 +13,10 @@
       <summary>Colorized display</summary>
       <description>Whether to show colorized AQI</description>
     </key>
+    <key name="lock-screen" type="b">
+      <default>true</default>
+      <description>Whether to show indicator on lock screen</description>
+    </key>
     <key name="update-time" type="i">
       <range min="10" max="60" />
       <default>15</default>

@@ -44,6 +44,11 @@ type Region = {
 
 type AQIValue = number | string;
 
+interface SessionMode {
+  currentMode: "user" | "unlock-dialog",
+  parentMode: "user" | "unlock-dialog",
+}
+
 export default class AQIArmeniaExtension extends Extension {
   private gsettings?: Gio.Settings
   private indicator?: PanelMenu.Button
@@ -54,28 +59,58 @@ export default class AQIArmeniaExtension extends Extension {
   private color_provider!: AQIColorProvider;
   private city_provider!: CityProvider;
   private settings_signal_ids?: number[];
+  private session_id?: number;
 
   enable() {
     this.gsettings = this.getSettings();
-    this.indicator = new PanelMenu.Button(0.0, this.metadata.name, false);
     this.color_provider = new AQIColorProvider(this.gsettings);
     this.city_provider = new CityProvider(this.gsettings);
     this.settings_signal_ids = [];
     this.aqi_value = UNKNOWN_AQI_VALUE;
+
+    const session_mode: SessionMode = Main.sessionMode;
+    this.sessionModeChanged(session_mode);
+    this.session_id = Main.sessionMode.connect("updated", this.sessionModeChanged.bind(this));
+    this.bindSettings();
+  }
+
+  private showIndicator(): void {
+    if (this.indicator) {
+      return;
+    }
+    this.indicator = new PanelMenu.Button(0.0, this.metadata.name, false);
 
     this.aqi_label = new St.Label({
       text: "AQI: Loading...",
       y_align: Clutter.ActorAlign.CENTER,
     });
 
-    this.createMenu();
     this.indicator.add_child(this.aqi_label);
-    this.bindSettings();
+    this.createMenu();
     this.setUpdateTimer();
-
     this.updateAqi();
-
     Main.panel.addToStatusArea(this.uuid, this.indicator);
+  }
+
+  private removeIndicator(): void {
+    if (this.gsettings?.get_boolean("lock-screen")) {
+      return;
+    }
+    if (this.indicator) {
+      this.indicator.destroy();
+      this.indicator = undefined;
+      this.aqi_label = undefined;
+      this.menu = undefined;
+      this.removeUpdateTimer();
+    }
+  }
+
+  private sessionModeChanged(session: SessionMode): void {
+    if (session.currentMode === "user" || session.parentMode === "user") {
+      this.showIndicator();
+    } else if (session.currentMode === "unlock-dialog") {
+      this.removeIndicator();
+    }
   }
 
   private setUpdateTimer(): void {
@@ -179,6 +214,7 @@ export default class AQIArmeniaExtension extends Extension {
     this.indicator?.destroy();
     this.menu = undefined;
     this.aqi_label = undefined;
+    Main.sessionMode.disconnect(this.session_id);
     this.removeUpdateTimer();
   }
 }
