@@ -74,6 +74,7 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
       model: new Gtk.StringList({
         strings: [...DISTRICTS],
       }),
+      visible: this.settings.get_string("city") === "Yerevan",
     });
 
     city_selector.set_selected(CITIES.indexOf(this.settings.get_string('city') as City));
