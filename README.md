@@ -7,6 +7,7 @@
 - Real-time AQI display in your top panel
 - Support for multiple Armenian cities (configurable)
 - Administrative districts selection for Yerevan
+- AQI indicator on lock screen (configurable)
 
 ## Requirements
 - Gnome Shell **49**
