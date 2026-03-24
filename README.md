@@ -9,6 +9,13 @@
 - Administrative districts selection for Yerevan
 - AQI indicator on lock screen (configurable)
 
+## Screenshots
+
+![Indicator screenshot with clean air](schemas/screenshots/screenshot-1.png?raw=true "Indicator with clean air")
+![Indicator screenshot with moderate pollution](schemas/screenshots/screenshot-2.png?raw=true "Indicator with moderate pollution")
+
+![Extension settings screenshot](schemas/screenshots/settings.png?raw=true "Settings")
+
 ## Requirements
 - Gnome Shell **49**
 
