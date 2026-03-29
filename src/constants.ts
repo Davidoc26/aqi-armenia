@@ -38,7 +38,6 @@ export const DISTRICTS = [
   "Avan",
   "Ajapnyak",
   "Arabkir",
-  "Avan",
   "Davtashen",
   "Erebuni",
   "Kanaker-Zeytun",
