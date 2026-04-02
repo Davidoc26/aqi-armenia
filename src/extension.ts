@@ -30,13 +30,15 @@ import { AQIColorProvider } from "./aqi_color_provider.js";
 import { CityProvider } from "./city_provider.js";
 import { UNKNOWN_AQI_VALUE } from "./constants.js";
 
+type Option<T> = T | undefined;
+
 type Region = {
   title: string,
   slug: string,
   temperature: number,
   humidity: number,
   aqi: number,
-  pm2_5: number,
+  "pm2.5": number,
   pm10: number,
   no2: number,
   time: string,
@@ -60,6 +62,8 @@ export default class AQIArmeniaExtension extends Extension {
   private city_provider!: CityProvider;
   private settings_signal_ids?: number[];
   private session_id?: number;
+  private pollutant_info?: PopupMenu.PopupMenuItem;
+  private current_region?: Region;
 
   enable() {
     this.gsettings = this.getSettings();
@@ -148,18 +152,25 @@ export default class AQIArmeniaExtension extends Extension {
 
     const update_time_signal_id = this.gsettings!.connect("changed::update-time", () => this.restartUpdateTimer());
     this.settings_signal_ids?.push(update_time_signal_id);
+
+    const pm25_menu_signal_id = this.gsettings!.connect("changed::pm25", () => this.updatePollutantInfo());
+    this.settings_signal_ids?.push(pm25_menu_signal_id);
+    const pm10_menu_signal_id = this.gsettings!.connect("changed::pm10", () => this.updatePollutantInfo());
+    this.settings_signal_ids?.push(pm10_menu_signal_id);
+    const humidity_menu_signal_id = this.gsettings!.connect("changed::humidity", () => this.updatePollutantInfo());
+    this.settings_signal_ids?.push(humidity_menu_signal_id);
   }
 
-  private parseData(data: string): AQIValue {
+  private parseData(data: string): Option<Region> {
     const regions: Region[] = JSON.parse(data).regions;
     const [city, district] = this.city_provider.getCity();
     if (district) {
       const d = regions.find(r => r.title === district);
-      return d?.aqi.toString() ?? UNKNOWN_AQI_VALUE;
+      return d;
     }
     const region = regions.find(r => r.title === city);
 
-    return region?.aqi ?? UNKNOWN_AQI_VALUE;
+    return region;
   }
 
   private setAqiLabel(aqi: AQIValue): void {
@@ -171,7 +182,7 @@ export default class AQIArmeniaExtension extends Extension {
     this.aqi_label?.clutter_text.set_markup(`AQI: <span foreground="${this.color_provider.getColor(aqi)}">${aqi}</span>`);
   }
 
-  private fetchData(): Promise<AQIValue> {
+  private fetchData(): Promise<Option<Region>> {
     const session = new Soup.Session();
     const url = "https://airquality.am/en/air-quality-app/v1/stations.json";
     const message = Soup.Message.new('GET', url);
@@ -190,12 +201,49 @@ export default class AQIArmeniaExtension extends Extension {
   }
 
   private async updateAqi(): Promise<void> {
-    this.aqi_value = await this.fetchData().catch(() => UNKNOWN_AQI_VALUE);
-    this.setAqiLabel(this.aqi_value);
+    const region: Option<Region> = await this.fetchData();
+    if (region) {
+      this.current_region = region;
+      this.aqi_value = this.current_region.aqi ?? UNKNOWN_AQI_VALUE;
+      this.updatePollutantInfo();
+      this.setAqiLabel(this.aqi_value);
+    }
+  }
+
+  private updatePollutantInfo(): void {
+    if (!this.pollutant_info) return;
+
+    const lines: string[] = [];
+
+    if (this.gsettings?.get_boolean("pm25") && this.current_region?.["pm2.5"]) {
+      lines.push(`PM2.5: ${this.current_region?.["pm2.5"]} μg/m³`);
+    }
+
+    if (this.gsettings?.get_boolean("pm10") && this.current_region?.pm10) {
+      lines.push(`PM10: ${this.current_region?.pm10} μg/m³`);
+    }
+
+    if (this.gsettings?.get_boolean("humidity") && this.current_region?.humidity) {
+      lines.push(`Humidity: ${this.current_region?.humidity}%`);
+    }
+
+    if (lines.length > 0) {
+      let info: string = lines.join('\n');
+      this.pollutant_info.label.text = info;
+      this.pollutant_info.visible = true;
+    }
+    else {
+      this.pollutant_info.visible = false;
+    }
   }
 
   private createMenu(): void {
     this.menu = new PopupMenu.PopupMenu(this.indicator!, 0.0, St.Side.TOP);
+    this.pollutant_info = new PopupMenu.PopupMenuItem("", {
+      reactive: false,
+    });
+    this.pollutant_info.visible = false;
+    this.menu.addMenuItem(this.pollutant_info);
     const refreshItem = new PopupMenu.PopupMenuItem("Refresh");
     refreshItem.connect("activate", () => { this.updateAqi() });
     this.menu.addMenuItem(refreshItem);
@@ -217,6 +265,8 @@ export default class AQIArmeniaExtension extends Extension {
     this.indicator = undefined;
     this.menu = undefined;
     this.aqi_label = undefined;
+    this.pollutant_info = undefined;
+    this.current_region = undefined;
     Main.sessionMode.disconnect(this.session_id);
     this.removeUpdateTimer();
   }

@@ -84,6 +84,7 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
     city_group.add(region_selector);
 
     window.add(page)
+    window.add(this.createMenuSettingsPage());
 
     this.settings.bind("lock-screen", lock_screen_switch, "active", Gio.SettingsBindFlags.DEFAULT);
     this.settings.bind("update-time", update_time_selector, "value", Gio.SettingsBindFlags.DEFAULT);
@@ -105,6 +106,41 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
     })
 
     return Promise.resolve();
+  }
+
+  createMenuSettingsPage(): Adw.PreferencesPage {
+    const menu_page = new Adw.PreferencesPage({
+      title: ('Menu Settings'),
+      icon_name: 'dialog-information-symbolic',
+    });
+
+    const display_group = new Adw.PreferencesGroup({
+      title: "Display Options",
+      description: "Choose which data to show in the indicator menu",
+    });
+
+    const pm25_switch = new Adw.SwitchRow({
+      "title": "PM2.5",
+    });
+
+    const pm10_switch = new Adw.SwitchRow({
+      "title": "PM10",
+    });
+
+    const humidity_switch = new Adw.SwitchRow({
+      "title": "Humidity",
+    });
+
+    this.settings!.bind("pm25", pm25_switch, "active", Gio.SettingsBindFlags.DEFAULT);
+    this.settings!.bind("pm10", pm10_switch, "active", Gio.SettingsBindFlags.DEFAULT);
+    this.settings!.bind("humidity", humidity_switch, "active", Gio.SettingsBindFlags.DEFAULT);
+
+    display_group.add(pm25_switch);
+    display_group.add(pm10_switch);
+    display_group.add(humidity_switch);
+    menu_page.add(display_group);
+
+    return menu_page;
   }
 
 }

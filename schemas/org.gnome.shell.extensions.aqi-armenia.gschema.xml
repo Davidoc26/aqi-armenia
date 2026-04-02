@@ -21,5 +21,14 @@
       <range min="10" max="60" />
       <default>15</default>
     </key>
+    <key name="pm25" type="b">
+      <default>false</default>
+    </key>
+    <key name="pm10" type="b">
+      <default>false</default>
+    </key>
+    <key name="humidity" type="b">
+      <default>false</default>
+    </key>
   </schema>
 </schemalist>
