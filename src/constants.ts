@@ -49,6 +49,8 @@ export const DISTRICTS = [
 
 export type District = (typeof DISTRICTS)[number];
 
+export type RegionSlug = City | District;
+
 export enum AQIColor {
   Good = "#00e400",
   Moderate = "#ffff00",

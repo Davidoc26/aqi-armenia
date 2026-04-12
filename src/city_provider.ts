@@ -18,7 +18,7 @@
  */
 
 import Gio from "gi://Gio";
-import { City, District } from "./constants.js";
+import { City, District, RegionSlug } from "./constants.js";
 
 export class CityProvider {
   constructor(private settings: Gio.Settings) { }
@@ -32,6 +32,17 @@ export class CityProvider {
     }
 
     return [this.settings.get_string('city') as City];
+  }
+
+  public getSlug(): RegionSlug {
+    const city = this.settings.get_string('city') as City;
+
+    if (city === "Yerevan") {
+      const district = this.settings.get_string('yerevan-district') as District;
+      return district.toLowerCase() as District;
+    }
+
+    return city.toLowerCase() as City;
   }
 
 }

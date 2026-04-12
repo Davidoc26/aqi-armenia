@@ -162,13 +162,7 @@ export default class AQIArmeniaExtension extends Extension {
   }
 
   private parseData(data: string): Option<Region> {
-    const regions: Region[] = JSON.parse(data).regions;
-    const [city, district] = this.city_provider.getCity();
-    if (district) {
-      const d = regions.find(r => r.title === district);
-      return d;
-    }
-    const region = regions.find(r => r.title === city);
+    const region: Region = JSON.parse(data);
 
     return region;
   }
@@ -184,7 +178,7 @@ export default class AQIArmeniaExtension extends Extension {
 
   private fetchData(): Promise<Option<Region>> {
     const session = new Soup.Session();
-    const url = "https://airquality.am/en/air-quality-app/v1/stations.json";
+    const url = `https://airquality.am/en/air-quality-app/v1/region/${this.city_provider.getSlug()}.json`;
     const message = Soup.Message.new('GET', url);
 
     return new Promise((resolve, reject) => {
