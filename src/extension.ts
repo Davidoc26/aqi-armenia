@@ -178,6 +178,7 @@ export default class AQIArmeniaExtension extends Extension {
 
   private fetchData(): Promise<Option<Region>> {
     const session = new Soup.Session();
+    session.set_user_agent("aqi-armenia-gnome-extension/1.0")
     const url = `https://airquality.am/en/air-quality-app/v1/region/${this.city_provider.getSlug()}.json`;
     const message = Soup.Message.new('GET', url);
 
