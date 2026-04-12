@@ -17,9 +17,22 @@
 ![Extension settings screenshot](schemas/screenshots/settings.png?raw=true "Settings")
 
 ## Requirements
-- Gnome Shell **49**
+- GNOME Shell 49, 50.
 
 ## Installation
+
+### From release archive
+
+1. Download the archive from the [releases page](https://github.com/Davidoc26/aqi-armenia/releases).
+2. Install and enable the extension:
+```bash
+gnome-extensions install -f aqi-armenia.zip
+
+# Restart GNOME Shell
+
+# Enable the extension
+gnome-extensions enable aqi-armenia@dav.eritsyan@gmail.com
+```
 
 ### From source
 
