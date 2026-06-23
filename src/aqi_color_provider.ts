@@ -21,6 +21,9 @@ import Gio from "gi://Gio";
 import { AQIColor } from "./constants.js";
 
 
+/**
+ * Provides AQI color mapping and colorization settings.
+ */
 export class AQIColorProvider {
 
   constructor(private settings: Gio.Settings) { }

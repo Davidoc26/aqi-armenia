@@ -62,4 +62,7 @@ export enum AQIColor {
   Default = "#999999",
 }
 
+/**
+ * Placeholder value used when AQI data is unavailable.
+ */
 export const UNKNOWN_AQI_VALUE: string = "?" as const;

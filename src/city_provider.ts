@@ -20,6 +20,9 @@
 import Gio from "gi://Gio";
 import { City, District, RegionSlug } from "./constants.js";
 
+/**
+ * Provides city and district selection based on settings.
+ */
 export class CityProvider {
   constructor(private settings: Gio.Settings) { }
 

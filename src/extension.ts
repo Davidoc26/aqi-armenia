@@ -78,6 +78,10 @@ export default class AQIArmeniaExtension extends Extension {
     this.bindSettings();
   }
 
+  /**
+   * Creates and shows the panel indicator.
+   * Initializes label, menu and periodic AQI update.
+   */
   private showIndicator(): void {
     if (this.indicator) {
       this.indicator.set_reactive(true);
@@ -97,6 +101,10 @@ export default class AQIArmeniaExtension extends Extension {
     Main.panel.addToStatusArea(this.uuid, this.indicator);
   }
 
+  /**
+   * Removes and destroys the panel indicator unless lock-screen mode is active.
+   * Cleans up UI elements and timers.
+   */
   private removeIndicator(): void {
     if (this.gsettings?.get_boolean("lock-screen")) {
       return;
@@ -110,6 +118,10 @@ export default class AQIArmeniaExtension extends Extension {
     }
   }
 
+  /**
+   * Handles GNOME session mode changes.
+   * Shows or hides indicator depending on session state.
+   */
   private sessionModeChanged(session: SessionMode): void {
     if (session.currentMode === "user" || session.parentMode === "user") {
       this.showIndicator();
@@ -119,6 +131,9 @@ export default class AQIArmeniaExtension extends Extension {
     }
   }
 
+  /**
+   * Starts periodic AQI updates.
+   */
   private setUpdateTimer(): void {
     const interval_ms = this.gsettings!.get_int("update-time") * 60000;
 
@@ -140,6 +155,9 @@ export default class AQIArmeniaExtension extends Extension {
     this.setUpdateTimer();
   }
 
+  /**
+   * Connects GSettings signals to reactive update handlers.
+   */
   private bindSettings(): void {
     const city_signal_id = this.gsettings!.connect("changed::city", () => this.updateAqi());
     this.settings_signal_ids?.push(city_signal_id);
@@ -161,12 +179,18 @@ export default class AQIArmeniaExtension extends Extension {
     this.settings_signal_ids?.push(humidity_menu_signal_id);
   }
 
+  /**
+   * Parses raw JSON response into Region model.
+   */
   private parseData(data: string): Option<Region> {
     const region: Region = JSON.parse(data);
 
     return region;
   }
 
+  /**
+   * Updates AQI label text with optional colorization.
+   */
   private setAqiLabel(aqi: AQIValue): void {
     if (!this.color_provider.isColorized()) {
       this.aqi_label?.clutter_text.set_markup(`AQI: ${aqi}`);
@@ -176,6 +200,15 @@ export default class AQIArmeniaExtension extends Extension {
     this.aqi_label?.clutter_text.set_markup(`AQI: <span foreground="${this.color_provider.getColor(aqi)}">${aqi}</span>`);
   }
 
+  /**
+   * Fetches AQI data from remote API for selected city/region.
+   * Returns parsed Region object or undefined on failure.
+   *
+   * See: https://airquality.am/en/api-docs
+   *
+   * Note: The API requires a meaningful User-Agent identifying the application.
+   * This extension sets a custom UA for identification.
+   */
   private fetchData(): Promise<Option<Region>> {
     const session = new Soup.Session();
     session.set_user_agent("aqi-armenia-gnome-extension/1.0")
@@ -195,6 +228,10 @@ export default class AQIArmeniaExtension extends Extension {
     });
   }
 
+  /**
+   * Fetches latest AQI data and updates internal state + UI.
+   * Also refreshes pollutant info panel.
+   */
   private async updateAqi(): Promise<void> {
     const region: Option<Region> = await this.fetchData();
     if (region) {
@@ -205,6 +242,10 @@ export default class AQIArmeniaExtension extends Extension {
     }
   }
 
+  /**
+   * Updates pollutant info panel (PM2.5, PM10, humidity)
+   * based on settings toggles and latest feteched data.
+   */
   private updatePollutantInfo(): void {
     if (!this.pollutant_info) return;
 
@@ -232,6 +273,10 @@ export default class AQIArmeniaExtension extends Extension {
     }
   }
 
+  /**
+   * Creates popup menu for panel indicator.
+   * Includes refresh action, settings shortcut and pollutant info.
+   */
   private createMenu(): void {
     this.menu = new PopupMenu.PopupMenu(this.indicator!, 0.0, St.Side.TOP);
     this.pollutant_info = new PopupMenu.PopupMenuItem("", {
@@ -248,6 +293,9 @@ export default class AQIArmeniaExtension extends Extension {
     this.indicator?.setMenu(this.menu);
   }
 
+  /**
+  * Disconnects all GSettings signals.
+  */
   private diconnectSignals(): void {
     this.settings_signal_ids?.forEach(id => this.gsettings?.disconnect(id));
   }
