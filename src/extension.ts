@@ -20,19 +20,19 @@
 import Clutter from "gi://Clutter";
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
-import Soup from "gi://Soup?version=3.0";
 import St from "gi://St";
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { AQIColorProvider } from "./aqi_color_provider.js";
+import { AQIDataProvider } from "./aqi_data_provider.js";
 import { CityProvider } from "./city_provider.js";
 import { UNKNOWN_AQI_VALUE } from "./constants.js";
 
-type Option<T> = T | undefined;
+export type Option<T> = T | undefined;
 
-type Region = {
+export type Region = {
   title: string,
   slug: string,
   temperature: number,
@@ -60,6 +60,7 @@ export default class AQIArmeniaExtension extends Extension {
   private timeout_id?: number;
   private color_provider!: AQIColorProvider;
   private city_provider!: CityProvider;
+  private data_provider!: AQIDataProvider;
   private settings_signal_ids?: number[];
   private session_id?: number;
   private pollutant_info?: PopupMenu.PopupMenuItem;
@@ -69,6 +70,7 @@ export default class AQIArmeniaExtension extends Extension {
     this.gsettings = this.getSettings();
     this.color_provider = new AQIColorProvider(this.gsettings);
     this.city_provider = new CityProvider(this.gsettings);
+    this.data_provider = new AQIDataProvider();
     this.settings_signal_ids = [];
     this.aqi_value = UNKNOWN_AQI_VALUE;
 
@@ -180,15 +182,6 @@ export default class AQIArmeniaExtension extends Extension {
   }
 
   /**
-   * Parses raw JSON response into Region model.
-   */
-  private parseData(data: string): Option<Region> {
-    const region: Region = JSON.parse(data);
-
-    return region;
-  }
-
-  /**
    * Updates AQI label text with optional colorization.
    */
   private setAqiLabel(aqi: AQIValue): void {
@@ -201,43 +194,20 @@ export default class AQIArmeniaExtension extends Extension {
   }
 
   /**
-   * Fetches AQI data from remote API for selected city/region.
-   * Returns parsed Region object or undefined on failure.
-   *
-   * See: https://airquality.am/en/api-docs
-   *
-   * Note: The API requires a meaningful User-Agent identifying the application.
-   * This extension sets a custom UA for identification.
-   */
-  private fetchData(): Promise<Option<Region>> {
-    const session = new Soup.Session();
-    session.set_user_agent("aqi-armenia-gnome-extension/1.0")
-    const url = `https://airquality.am/en/air-quality-app/v1/region/${this.city_provider.getSlug()}.json`;
-    const message = Soup.Message.new('GET', url);
-
-    return new Promise((resolve, reject) => {
-      session.send_and_read_async(message, GLib.PRIORITY_DEFAULT, null, (session, result) => {
-        try {
-          const bytes = session?.send_and_read_finish(result);
-          const data = new TextDecoder().decode(bytes?.get_data()!);
-          resolve(this.parseData(data));
-        } catch (e: any) {
-          reject(e);
-        }
-      });
-    });
-  }
-
-  /**
    * Fetches latest AQI data and updates internal state + UI.
    * Also refreshes pollutant info panel.
    */
   private async updateAqi(): Promise<void> {
-    const region: Option<Region> = await this.fetchData();
-    if (region) {
-      this.current_region = region;
-      this.aqi_value = this.current_region.aqi ?? UNKNOWN_AQI_VALUE;
-      this.updatePollutantInfo();
+    try {
+      const region: Option<Region> = await this.data_provider.fetchData(this.city_provider.getSlug());
+      if (region) {
+        this.current_region = region;
+        this.aqi_value = this.current_region.aqi ?? UNKNOWN_AQI_VALUE;
+        this.updatePollutantInfo();
+        this.setAqiLabel(this.aqi_value);
+      }
+    } catch (e) {
+      this.aqi_value = this.current_region?.aqi ?? UNKNOWN_AQI_VALUE;
       this.setAqiLabel(this.aqi_value);
     }
   }

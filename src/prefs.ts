@@ -21,7 +21,7 @@ import Adw from "gi://Adw";
 import Gio from "gi://Gio";
 import Gtk from "gi://Gtk";
 import { ExtensionPreferences, gettext as _ } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
-import { City, CITIES, DISTRICTS, District } from "./constants.js"
+import { CITIES, City, DISTRICTS, District } from "./constants.js";
 
 export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences {
   private settings?: Gio.Settings
