@@ -28,9 +28,17 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
 
   fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
     this.settings = this.getSettings();
+
+    window.add(this.createGeneralSettingsPage());
+    window.add(this.createMenuSettingsPage());
+
+    return Promise.resolve();
+  }
+
+  createGeneralSettingsPage(): Adw.PreferencesPage {
     const page = new Adw.PreferencesPage({
-      title: _('General'),
-      icon_name: 'dialog-information-symbolic',
+      title: _("General"),
+      icon_name: "dialog-information-symbolic",
     });
 
     const main_group = new Adw.PreferencesGroup({
@@ -48,7 +56,7 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
       adjustment: new Gtk.Adjustment({
         lower: 10,
         upper: 60,
-        value: this.settings.get_int("update-time"),
+        value: this.settings!.get_int("update-time"),
         stepIncrement: 1,
       }),
     });
@@ -69,49 +77,43 @@ export default class AQIArmeniaExtensionPreferences extends ExtensionPreferences
       }),
     });
 
-    const region_selector = new Adw.ComboRow({
+    const district_selector = new Adw.ComboRow({
       title: "Administrative district (Leave Yerevan to get data for the entire city)",
       model: new Gtk.StringList({
         strings: [...DISTRICTS],
       }),
-      visible: this.settings.get_string("city") === "Yerevan",
+      visible: this.settings!.get_string("city") === "Yerevan",
     });
 
-    city_selector.set_selected(CITIES.indexOf(this.settings.get_string('city') as City));
-    region_selector.set_selected(DISTRICTS.indexOf(this.settings.get_string('yerevan-district') as District));
+    city_selector.set_selected(CITIES.indexOf(this.settings!.get_string("city") as City));
+    district_selector.set_selected(DISTRICTS.indexOf(this.settings!.get_string("yerevan-district") as District));
     page.add(city_group);
     city_group.add(city_selector);
-    city_group.add(region_selector);
+    city_group.add(district_selector);
 
-    window.add(page)
-    window.add(this.createMenuSettingsPage());
+    this.settings!.bind("lock-screen", lock_screen_switch, "active", Gio.SettingsBindFlags.DEFAULT);
+    this.settings!.bind("update-time", update_time_selector, "value", Gio.SettingsBindFlags.DEFAULT);
+    this.settings!.bind("colorized", color_switch, "active", Gio.SettingsBindFlags.DEFAULT);
 
-    this.settings.bind("lock-screen", lock_screen_switch, "active", Gio.SettingsBindFlags.DEFAULT);
-    this.settings.bind("update-time", update_time_selector, "value", Gio.SettingsBindFlags.DEFAULT);
-    this.settings.bind("colorized", color_switch, "active", Gio.SettingsBindFlags.DEFAULT);
-    region_selector.connect("notify::selected", (selector: Adw.ComboRow) => {
-      const selectedDistinct = selector.get_selected_item() as Gtk.StringObject;
-      this.settings?.set_string("yerevan-district", selectedDistinct.get_string());
-    })
     city_selector.connect("notify::selected", (selector: Adw.ComboRow) => {
       const selectedCity = selector.get_selected_item() as Gtk.StringObject;
       this.settings?.set_string("city", selectedCity.get_string());
 
-      if (selectedCity.get_string() === "Yerevan") {
-        region_selector.set_visible(true);
-      }
-      else {
-        region_selector.set_visible(false);
-      }
+      district_selector.set_visible(selectedCity.get_string() === "Yerevan");
     })
 
-    return Promise.resolve();
+    district_selector.connect("notify::selected", (selector: Adw.ComboRow) => {
+      const selectedDistrict = selector.get_selected_item() as Gtk.StringObject;
+      this.settings?.set_string("yerevan-district", selectedDistrict.get_string());
+    })
+
+    return page;
   }
 
   createMenuSettingsPage(): Adw.PreferencesPage {
     const menu_page = new Adw.PreferencesPage({
-      title: ('Menu Settings'),
-      icon_name: 'dialog-information-symbolic',
+      title: ("Menu Settings"),
+      icon_name: "dialog-information-symbolic",
     });
 
     const display_group = new Adw.PreferencesGroup({
